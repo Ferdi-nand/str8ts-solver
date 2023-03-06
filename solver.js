@@ -4,37 +4,39 @@
 
 // The board is stored here
 let board = [];
-// Global variables to store rows and columns
-let rows = [];
-let columns = [];
+// Global variables to store the compartments once to access them later
 let compartments = [];
 
 function init(startboard) {
-
     board = startboard;
-
-    console.log('board ' + board);
     getCompartments();
-    getRows();
-    getColumns();
 }
 
+/**
+ * Gets compartments for rows and columns of the board and write them to the 'compartments' array
+ */
 function getCompartments() {
     compartments = [];
 
     // Get compartments for rows
     for (let row = 0; row < 9; row++) {
         let compartment = [];
+
+        // Iterate over each cell in the row
         for (let col = 0; col < 9; col++) {
+            // If the cell is a clue, it is a complete compartment, so push it to the compartments array and clear the compartment
             if (board[row][col].clue) {
                 if (compartment.length > 0) {
                     compartments.push([...compartment]);
-                    compartment = []; // Clear compartment
+                    compartment = [];
                 }
             } else {
+                // If the cell is not a clue, add it to the compartment
                 compartment.push(board[row][col]);
             }
         }
+
+        // If there are any cells left in the compartment after iterating over each cell, push it to the compartments array
         if (compartment.length > 0) {
             compartments.push([...compartment]);
         }
@@ -43,41 +45,25 @@ function getCompartments() {
     // Get compartments for columns
     for (let col = 0; col < 9; col++) {
         let compartment = [];
+
+        // Iterate over each cell in the column
         for (let row = 0; row < 9; row++) {
+            // If the cell is a clue, it is a complete compartment, so push it to the compartments array and clear the compartment
             if (board[row][col].clue) {
                 if (compartment.length > 0) {
                     compartments.push([...compartment]);
-                    compartment = []; // Clear compartment
+                    compartment = [];
                 }
             } else {
+                // If the cell is not a clue, add it to the compartment
                 compartment.push(board[row][col]);
             }
         }
+
+        // If there are any cells left in the compartment after iterating over each cell, push it to the compartments array
         if (compartment.length > 0) {
             compartments.push([...compartment]);
         }
-    }
-}
-
-function getRows() {
-    rows = [];
-    for (let row = 0; row < 9; row++) {
-        let rowValues = [];
-        for (let col = 0; col < 9; col++) {
-            rowValues.push(board[row][col]);
-        }
-        rows.push(rowValues);
-    }
-}
-
-function getColumns() {
-    columns = [];
-    for (let col = 0; col < 9; col++) {
-        let colValues = [];
-        for (let row = 0; row < 9; row++) {
-            colValues.push(board[row][col]);
-        }
-        columns.push(colValues);
     }
 }
 
@@ -88,7 +74,11 @@ function isValidBoard() {
     return checkCompartments() && checkRows() && checkColumns();
 }
 
-
+/**
+ * Checks if any row contains duplicates.
+ *
+ * @returns {boolean}  true if no row contains duplicates, false otherwise.
+ */
 function checkRows() {
     for (let row = 0; row < 9; row++) {
         let values = new Set();
@@ -103,6 +93,11 @@ function checkRows() {
     return true;
 }
 
+/**
+ * Checks if any column contains duplicates.
+ *
+ * @returns {boolean}  true if no column contains duplicates, false otherwise.
+ */
 function checkColumns() {
     for (let col = 0; col < 9; col++) {
         let values = new Set();
@@ -117,17 +112,28 @@ function checkColumns() {
     return true;
 }
 
+/**
+ * Checks if compartments meet the Str8ts criteria (unique numbers in sequence).
+ *
+ * @returns {boolean}  true if compartments meet the criteria, false otherwise.
+ */
 function checkCompartments() {
     for (let compartment of compartments) {
         const values = compartment.map(cell => cell.value);
+
+        // count how often zero does appear in the values, we need it for the gap check below
         var zeros = values.filter(val => val === 0).length;
 
-        const sortedValues = values.filter(val => val !== 0).sort((a, b) => a - b);
+        const sortedValues = getSortedValues(values);
 
         let prevValue = sortedValues[0];
         for (let i = 1; i < sortedValues.length; i++) {
             const curValue = sortedValues[i];
             const diff = curValue - prevValue;
+            /* diff = 1 means there is no gap between the numbers.
+             * diff > 1 mean there is a gap, it could caused by values missing that will fill the gap.
+             * Each zero is able to bridge a gap
+             */
             if (diff > 1) {
                 zeros -= diff - 1;
                 if (zeros < 0) {
@@ -138,6 +144,16 @@ function checkCompartments() {
         }
     }
     return true;
+}
+
+/**
+ * Gets an array of non-zero values sorted in ascending order.
+ *
+ * @param {Array} values - The array of values to sort.
+ * @returns {Array} Returns an array of non-zero values sorted in ascending order.
+ */
+function getSortedValues(values) {
+    return values.filter(val => val !== 0).sort((a, b) => a - b);
 }
 
 
@@ -155,7 +171,7 @@ function solveStr8ts() {
     }
 
     // Try all possible numbers in the empty cell
-    for (let num = 1; num <= board.length; num++) {
+    for (let num = 1; num <= 9; num++) {
         if (isValidMove(row, col, num)) {
             board[row][col].value = num;
 

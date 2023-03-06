@@ -48,7 +48,6 @@ cells.forEach(cell => {
 
 solveButton.addEventListener('click', () => {
     init(exportTable());
-    console.log('init completed');
     if (solveStr8ts()) {
         // import data
         let i = 0;
